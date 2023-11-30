@@ -1,0 +1,5 @@
+// ignore generated .js files
+*.js
+
+// ignore node_modules dir
+node_modules/
