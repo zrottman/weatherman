@@ -1,46 +1,36 @@
-import fetch from 'node-fetch';
 import config from './config.js';
 import * as types from './types.js';
 import formatWeather from './formatter.js';
-
-
-async function getJSON(url: string) {
-    const response = await fetch(url);
-    const body = await response.json();
-    return body;
-}
-
-function isFailure(response: types.APIResponse): response is types.Failure {
-    return typeof response.cod === 'string';
-}
-
-// validate num args
-if (process.argv.length > 3) {
-    console.log("usage: node main.js [<zip> (optional)]");
-    process.exit(1);
-}
-
-// validate zip arg if present
-let zip: string = '90032';
-if (process.argv.length == 3) {
-    const validZip = /^\d{5}$/;
-    if (!validZip.test(process.argv[2])) {
-        console.log("invalid zip format.");
-        process.exit(2);
-    }
-    zip = process.argv[2];
-}
+import * as utils from './utils.js';
+import getJSON from './apiClient.js';
 
 async function main() {
-    const url: string = `https://api.openweathermap.org/data/2.5/weather?zip=${zip}&units=imperial&appid=${config.apiKey}`;
-    let res = await getJSON(url) as types.APIResponse;
 
-    if (isFailure(res)) {
-        console.error(`Error retrieving weather for zip code ${zip}: ${res.message}`);
-        process.exit(3);
+    // validate num args
+    if (!utils.validateArgs(process.argv)) {
+        console.log("usage: node main.js [<zip> (optional)]");
+        process.exit(1);
     }
 
-    console.log(formatWeather(res));
+    // get zip
+    const defaultZip: string = '90032';
+    const zip: string = utils.getZip(process.argv, defaultZip);
+
+    // build API url
+    const url: string = `https://api.openweathermap.org/data/2.5/weather?` +
+                        `zip=${zip}&units=imperial&appid=${config.apiKey}`;
+
+    // make API request
+    const response = await getJSON(url) as types.APIResponse;
+
+    // check for failure
+    if (utils.isFailure(response)) {
+        console.error(`Error retrieving weather for zip code ${zip}: ${response.message}`);
+        process.exit(2);
+    }
+
+    // print result
+    console.log(formatWeather(response));
 }
 
 main().catch(error => {
