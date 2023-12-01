@@ -1,9 +1,9 @@
 import fetch from 'node-fetch';
-import * as dotenv from 'dotenv';
+import config from './config.js';
 
-dotenv.config();
+//const fetch = require('node-fetch');
+//const config = require('./config');
 
-const apiKey = process.env.API_KEY_OPENWEATHERMAP;
 
 type APIResponse = Success | Failure;
 
@@ -96,13 +96,20 @@ if (process.argv.length == 3) {
     zip = process.argv[2];
 }
 
-const url: string = `https://api.openweathermap.org/data/2.5/weather?zip=${zip}&units=imperial&appid=${apiKey}`;
-let res = await getJSON(url) as APIResponse;
+async function main() {
+    const url: string = `https://api.openweathermap.org/data/2.5/weather?zip=${zip}&units=imperial&appid=${config.apiKey}`;
+    let res = await getJSON(url) as APIResponse;
 
-if (isFailure(res)) {
-    console.error(`Error retrieving weather for zip code ${zip}: ${res.message}`);
-    process.exit(3);
+    if (isFailure(res)) {
+        console.error(`Error retrieving weather for zip code ${zip}: ${res.message}`);
+        process.exit(3);
+    }
+
+    const output: string = `It's currently ${res.main.temp} degrees Fahrenheit and ${res.weather[0].main.toLowerCase()} in beautiful ${res.name}.`;
+    console.log(output);
 }
 
-const output: string = `It's currently ${res.main.temp} degrees Fahrenheit and ${res.weather[0].main.toLowerCase()} in beautiful ${res.name}.`;
-console.log(output);
+main().catch(error => {
+    console.error('An error occured: ', error);
+});
+
