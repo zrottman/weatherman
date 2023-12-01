@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import config from './config.js';
 import * as types from './types.js';
+import formatWeather from './formatter.js';
 
 
 async function getJSON(url: string) {
@@ -39,8 +40,7 @@ async function main() {
         process.exit(3);
     }
 
-    const output: string = `It's currently ${res.main.temp} degrees Fahrenheit and ${res.weather[0].main.toLowerCase()} in beautiful ${res.name}.`;
-    console.log(output);
+    console.log(formatWeather(res));
 }
 
 main().catch(error => {
